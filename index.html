@@ -96,7 +96,7 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             font-family: 'Inter', sans-serif;
         }
-        .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
+        .leaflet-popup-content { margin: 0 !important; width: 260px !important; }
         .leaflet-container a.leaflet-popup-close-button {
             color: #64748b;
             padding: 8px;
@@ -186,7 +186,7 @@
         </button>
     </div>
 
-    <!-- 3. VIEW CONTROL (OBEN LINKS) -->
+    <!-- 3. VIEW CONTROL (OBEN LINKS - Nur für History & Transport) -->
     <div id="view-controls" class="absolute top-24 left-4 z-[1000] glass-panel p-2 rounded-lg shadow-lg flex gap-2">
         <button onclick="setViewMode('details')" id="view-details" class="px-3 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow transition-all flex items-center gap-1">
             <i class="ph-fill ph-map-pin"></i> Details
@@ -585,10 +585,8 @@
             const totalPop = getPopForYear(saarlandPopData, currentYear);
             document.getElementById('total-pop-value').innerText = totalPop.toLocaleString();
             document.getElementById('total-pop-year').innerText = "Jahr: " + currentYear;
-            
             const badge = document.getElementById('reform-badge');
             if (currentYear >= 1973 && currentYear <= 1975) { badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
-            
             clearMap(); renderUrban();
         }
 
@@ -598,6 +596,8 @@
                 document.querySelectorAll('.details-content').forEach(el => { if(el.id !== `details-${id}`) el.classList.remove('open'); });
                 contentDiv.classList.add('open');
                 contentDiv.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                contentDiv.parentElement.classList.add('ring-2', 'ring-slate-400');
+                setTimeout(() => contentDiv.parentElement.classList.remove('ring-2', 'ring-slate-400'), 1000);
             }
         }
 
@@ -606,29 +606,19 @@
             div.className = `group rounded-xl bg-white border border-slate-100 hover:border-slate-300 shadow-sm mb-2 overflow-hidden`;
             const dotColor = colorClass.replace('border-', 'bg-').replace('text-', 'bg-');
             
-            // Badge Logic for List Item Header/Body
             let badgeHtml = '';
             if (item.type) {
                 let badgeColor = "bg-slate-100 text-slate-600 border-slate-200";
                 if (item.type === "Kohle") badgeColor = "bg-red-50 text-red-600 border-red-100";
                 else if (item.type === "Eisen" || item.type === "Kupfer" || item.type === "Kalk") badgeColor = "bg-orange-50 text-orange-600 border-orange-100";
                 else if (item.type === "Stahl") badgeColor = "bg-slate-50 text-slate-600 border-slate-200";
-
                 badgeHtml = `<span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded border ml-2">${item.type}</span>`;
             }
 
             div.innerHTML = `
                 <div class="p-3.5 flex items-center gap-3.5 cursor-pointer" onclick="this.nextElementSibling.classList.toggle('open'); ${onClickMarker?`(${onClickMarker})()`:''}">
-                    <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl text-slate-500">
-                        <i class="${iconClass}"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-bold text-sm text-slate-800 flex items-center">
-                            ${item.name} 
-                            <span class="md:hidden">${badgeHtml}</span>
-                        </div>
-                        <div class="text-xs text-slate-500 font-medium">${item.period}</div>
-                    </div>
+                    <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl text-slate-500"><i class="${iconClass}"></i></div>
+                    <div class="flex-1"><div class="font-bold text-sm text-slate-800 flex items-center">${item.name} <span class="md:hidden">${badgeHtml}</span></div><div class="text-xs text-slate-500 font-medium">${item.period}</div></div>
                     <div class="w-2 h-2 rounded-full ${dotColor}"></div>
                 </div>
                 <div id="details-${item.id}" class="details-content bg-slate-50 text-xs text-slate-600 px-4">
@@ -693,34 +683,14 @@
                     let icon = m.type === "Kohle" ? getMineIcon('#ef4444') : getOreIcon('#f97316');
                     let color = m.type === "Kohle" ? "bg-red-500" : "bg-orange-500";
                     const marker = L.marker(m.coords, {icon: icon}).addTo(currentLayers);
-
                     let badgeColor = m.type === "Kohle" ? "bg-red-50 text-red-600 border-red-100" : "bg-orange-50 text-orange-600 border-orange-100";
-                    marker.bindPopup(`
-                        <div class="w-full bg-white p-3">
-                            <div class="flex justify-between items-start">
-                                <b class="${m.type==='Kohle'?'text-red-600':'text-orange-600'} block text-sm">${m.name}</b>
-                                <span class="${badgeColor} text-[9px] font-bold px-1.5 py-0.5 rounded border">${m.type}</span>
-                            </div>
-                            <div class="text-xs text-slate-500 mt-1 mb-3">${m.period}</div>
-                            <button onclick="expandSidebarItem('${m.id}')" class="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded transition-colors">Weitere Informationen →</button>
-                        </div>
-                    `);
+                    marker.bindPopup(`<div class="w-full bg-white p-3"><div class="flex justify-between items-start"><b class="${m.type==='Kohle'?'text-red-600':'text-orange-600'} block text-sm">${m.name}</b><span class="${badgeColor} text-[9px] font-bold px-1.5 py-0.5 rounded border">${m.type}</span></div><div class="text-xs text-slate-500 mt-1 mb-3">${m.period}</div><button onclick="expandSidebarItem('${m.id}')" class="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded transition-colors">Weitere Informationen →</button></div>`);
                     list.appendChild(createExpandableListItem(m, m.type === "Kohle" ? "ph-pick-axe" : "ph-mountains", color, () => { map.flyTo(m.coords, 13); marker.openPopup(); }));
                 });
                 historyData.steel.forEach(s => {
                     const marker = L.marker(s.coords, {icon: getSteelIcon('#475569')}).addTo(currentLayers);
-                    
                     let badgeColor = "bg-slate-50 text-slate-600 border-slate-200";
-                    marker.bindPopup(`
-                        <div class="w-full bg-white p-3">
-                            <div class="flex justify-between items-start">
-                                <b class="text-slate-700 block text-sm">${s.name}</b>
-                                <span class="${badgeColor} text-[9px] font-bold px-1.5 py-0.5 rounded border">${s.type}</span>
-                            </div>
-                            <div class="text-xs text-slate-500 mt-1 mb-3">${s.period}</div>
-                            <button onclick="expandSidebarItem('${s.id}')" class="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded transition-colors">Weitere Informationen →</button>
-                        </div>
-                    `);
+                    marker.bindPopup(`<div class="w-full bg-white p-3"><div class="flex justify-between items-start"><b class="text-slate-700 block text-sm">${s.name}</b><span class="${badgeColor} text-[9px] font-bold px-1.5 py-0.5 rounded border">${s.type}</span></div><div class="text-xs text-slate-500 mt-1 mb-3">${s.period}</div><button onclick="expandSidebarItem('${s.id}')" class="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded transition-colors">Weitere Informationen →</button></div>`);
                     list.appendChild(createExpandableListItem(s, "ph-factory", "bg-slate-600", () => { map.flyTo(s.coords, 13); marker.openPopup(); }));
                 });
             }
@@ -792,7 +762,6 @@
             renderLegend(mode);
             clearMap();
             if (mode === 'history') renderHistory();
-            if (mode === 'urban') renderUrban();
             if (mode === 'transport') renderTransport();
         }
 
