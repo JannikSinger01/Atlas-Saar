@@ -168,7 +168,7 @@
             </button>
             
             <div class="pt-8 text-xs text-slate-500 font-mono">
-                Version 4.0 • Datenstand: 2025
+                Version 5.0 • Datenstand: 2025
             </div>
         </div>
     </div>
@@ -315,13 +315,11 @@
             2021: 982348, 2022: 992666, 2023: 994424, 2024: 1012141
         };
 
-        // --- ÜBERSICHTSLINIEN ---
         const overviewLines = {
-            mining: { name: "Kohlegürtel", color: "#ef4444", path: [[49.180, 6.800], [49.250, 6.850], [49.290, 6.980], [49.310, 7.060], [49.350, 7.120], [49.370, 7.250]] },
-            steel: { name: "Stahlachse", color: "#475569", path: [[49.350, 6.740], [49.250, 6.840], [49.240, 6.940], [49.220, 7.030], [49.280, 7.120], [49.345, 7.180], [49.325, 7.335]] }
+            mining: { name: "Kohlegürtel", desc: "Historische Hauptachse des Bergbaus.", color: "#ef4444", path: [[49.180, 6.800], [49.250, 6.850], [49.290, 6.980], [49.310, 7.060], [49.350, 7.120], [49.370, 7.250]] },
+            steel: { name: "Stahlachse", desc: "Industrielle Verarbeitung in den Tälern.", color: "#475569", path: [[49.350, 6.740], [49.250, 6.840], [49.240, 6.940], [49.220, 7.030], [49.280, 7.120], [49.345, 7.180], [49.325, 7.335]] }
         };
 
-        // --- HISTORISCHE DATEN ---
         const historyData = {
             mines: [
                 { id: "m1", name: "Bergwerk Saar / Ensdorf", coords: [49.3188, 6.7780], type: "Kohle", period: "1833-2012", desc: "Das letzte aktive Bergwerk des Saarlandes (Halde Duhamel)." },
@@ -388,7 +386,9 @@
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20}).addTo(map);
         let currentLayers = L.layerGroup().addTo(map);
-        let borderLayer = L.layerGroup().addTo(map);
+        
+        // Landesgrenze als eigener Layer (immer sichtbar)
+        const borderLayer = L.layerGroup().addTo(map);
         L.polygon(saarlandBorder, {color: '#64748b', weight: 2, fill: false, dashArray: '6, 6', opacity: 0.75}).addTo(borderLayer);
 
         // --- HELPER FUNCTIONS ---
@@ -440,6 +440,7 @@
             document.getElementById('sidebar-title').innerText = "Berg- und Stahlbau";
             document.getElementById('sidebar-desc').innerText = "Kohle, Erz & Stahl";
             const list = document.getElementById('sidebar-content');
+            
             if(currentViewMode === 'overview') {
                 L.polyline(overviewLines.mining.path, {color: "#ef4444", weight: 20, opacity: 0.4}).addTo(currentLayers).bindTooltip("Kohlegürtel", {sticky: true});
                 L.polyline(overviewLines.steel.path, {color: "#475569", weight: 20, opacity: 0.4}).addTo(currentLayers).bindTooltip("Stahlachse", {sticky: true});
@@ -474,10 +475,9 @@
 
             urbanDataRaw.forEach(city => {
                 const pop = getPopForYear(city.history, currentYear);
-                // VERGRÖßERTE KREISE FÜR BESSERE SICHTBARKEIT UND ÜBERLAPPUNG
-                const radius = Math.sqrt(pop) * 35; 
+                // RADIUS ERHÖHT (x25)
+                const radius = Math.sqrt(pop) * 25; 
                 const color = pop > 100000 ? '#7e22ce' : (pop > 30000 ? '#a855f7' : '#d8b4fe');
-                // HALBTRANSPARENZ FÜR HEATMAP-EFFEKT BEI ÜBERLAPPUNG
                 const circle = L.circle(city.coords, {color, fillColor: color, fillOpacity: 0.5, radius, weight: 1}).addTo(currentLayers);
                 circle.bindPopup(`<b>${city.name}</b><br>${pop.toLocaleString()} EW`);
                 const item = document.createElement('div');
@@ -507,8 +507,13 @@
             const container = document.getElementById('legend-content');
             const panel = document.getElementById('legend-panel');
             let html = '';
-            if (mode === 'transport') { panel.classList.add('hidden'); panel.classList.remove('md:block'); return; }
+
+            if (mode === 'transport') {
+                panel.classList.add('hidden'); panel.classList.remove('md:block'); return;
+            }
             panel.classList.remove('hidden'); panel.classList.add('md:block');
+
+            // BORDER LEGEND HINZUGEFÜGT
             const borderLegend = `<div class="flex items-center gap-2.5 mt-2 pt-2 border-t border-slate-100"><span class="w-6 h-0 border-t-2 border-dashed border-slate-400"></span><span class="text-slate-500">Detaillierte Landesgrenze</span></div>`;
 
             if (mode === 'history') {
@@ -544,12 +549,14 @@
                 timeSlider.classList.remove('hidden'); 
                 popDisplay.classList.remove('hidden');
                 currentViewMode = 'details'; 
+                // Manuelles Update beim Wechsel
                 updateUrbanMap(document.getElementById('yearSlider').value);
             }
             
             renderLegend(mode);
             clearMap();
             if (mode === 'history') renderHistory();
+            // Urban wird durch updateUrbanMap oben getriggert
             if (mode === 'transport') renderTransport();
         }
 
