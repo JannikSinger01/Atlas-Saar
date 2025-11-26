@@ -116,7 +116,7 @@
                 </div>
             </div>
             
-            <div class="pt-6 text-xs text-slate-500 font-mono">Version 65.0 • Full Data</div>
+            <div class="pt-6 text-xs text-slate-500 font-mono">Version 66.0 • Link to Map</div>
         </div>
     </div>
 
@@ -313,6 +313,7 @@
                 sb_trans_title: "Schienennetz",
                 sb_trans_desc: "Aktive Linien",
                 more_info: "Weitere Informationen →",
+                show_on_map: "Auf Karte anzeigen", // New
                 border_label: "Landesgrenze",
                 coal_belt: "Kohlegürtel",
                 steel_axis: "Stahlachse",
@@ -359,6 +360,7 @@
                 sb_trans_title: "Réseau ferroviaire",
                 sb_trans_desc: "Lignes actives",
                 more_info: "Plus d'informations →",
+                show_on_map: "Afficher sur la carte", // New
                 border_label: "Frontière",
                 coal_belt: "Ceinture houillère",
                 steel_axis: "Axe de l'acier",
@@ -405,6 +407,7 @@
                 sb_trans_title: "Rail Network",
                 sb_trans_desc: "Active Lines",
                 more_info: "More Information →",
+                show_on_map: "Show on map", // New
                 border_label: "State Border",
                 coal_belt: "Coal Belt",
                 steel_axis: "Steel Axis",
@@ -564,7 +567,7 @@
                         fr:"Pittoresquement située près de l'étang d'Itzenplitz. La mine possède le plus ancien chevalement conservé de la Sarre (puits II), une construction en acier filigrane. L'étang a été créé à l'origine pour alimenter les machines à vapeur en eau et est aujourd'hui une zone de loisirs.",
                         en:"Picturesquely located by the Itzenplitz Pond. The mine has the oldest preserved headframe in Saarland (Shaft II), a filigree steel structure. The pond was originally created to supply water for steam engines and is now a recreation area."
                     },
-                    img:"img/itzeblitz.jpg", copyright:"Foto: Elmar Ersch"
+                    img:"img/itzenplitz.jpg", copyright:"Foto: Elmar Ersch"
                 },
                 {
                     id:"m9",name:"Grube Dechen",coords:[49.3378,7.1722],type:"Kohle",period:"1854-1968",
@@ -609,7 +612,7 @@
                         fr:"L'extraction de houille à St. Ingbert remonte au 15ème siècle. Le cœur du site est aujourd'hui la mine touristique 'Rischbachstollen', où l'on peut revivre authentiquement le dur labeur des mineurs. La mine a été décisive pour l'industrialisation de la ville.",
                         en:"Coal mining in St. Ingbert dates back to the 15th century. The centerpiece today is the 'Rischbach Tunnel' visitor mine, where one can authentically experience the miners' hard work. The mine was crucial for the city's industrialization."
                     },
-                    img:"img/ingbert.jpg", copyright:"Foto: Christian Bohr"
+                    img:"img/inbert.jpg", copyright:"Foto: Christian Bohr"
                 },
                 {
                     id:"m14",name:"Grube Maybach",coords:[49.3205,7.0632],type:"Kohle",period:"1873-1964",
@@ -636,7 +639,7 @@
                         fr:"Nommée d'après le légendaire banquier et ministre du commerce prussien August von der Heydt. La mine est idéalement située au milieu de la forêt urbaine de Sarrebruck. La cité ouvrière associée est particulièrement remarquable, conservée presque intacte et considérée comme un modèle de cité-jardin.",
                         en:"Named after the legendary banker and Prussian Trade Minister August von der Heydt. The mine is beautifully located in the middle of the Saarbrücken city forest. Particularly noteworthy is the associated workers' settlement, preserved almost unchanged and considered a garden city model."
                     },
-                    img:"img/heydt.jpg", copyright:"Foto: Unbekannt"
+                    img:"img/vonderheydt.jpg", copyright:"Foto: Unbekannt"
                 },
                 {
                     id:"m17",name:"Grube Jägersfreude",coords:[49.2610,7.0050],type:"Kohle",period:"1856-1968",
@@ -993,8 +996,9 @@
                 if(item.copyright) { imgHtml += `<div class="copyright-text">${item.copyright}</div>`; }
             }
 
-            div.innerHTML = `
-                <div class="p-3.5 flex items-center gap-3.5 cursor-pointer" onclick="this.nextElementSibling.classList.toggle('open'); ${onClickMarker?`(${onClickMarker})()`:''}">
+            // Create content HTML
+            const contentHtml = `
+                <div class="header-part p-3.5 flex items-center gap-3.5 cursor-pointer">
                     <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-xl text-slate-500"><i class="${iconClass}"></i></div>
                     <div class="flex-1"><div class="font-bold text-sm text-slate-800 flex items-center">${item.name} <span class="md:hidden">${badgeHtml}</span></div><div class="text-xs text-slate-500 font-medium">${item.period}</div></div><div class="w-2 h-2 rounded-full ${dotColor}"></div>
                 </div>
@@ -1003,8 +1007,31 @@
                         ${imgHtml}
                         <div class="mb-2 hidden md:block">${badgeHtml}</div>
                         <p class="leading-relaxed text-justify">${getLangText(item.desc)}</p>
+                        <button class="show-map-btn mt-4 w-full py-2 bg-white border border-slate-200 rounded-lg text-blue-600 font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+                            <i class="ph-bold ph-map-pin"></i> ${t('show_on_map')}
+                        </button>
                     </div>
                 </div>`;
+            
+            div.innerHTML = contentHtml;
+
+            // Attach event listeners properly (closure safe)
+            const header = div.querySelector('.header-part');
+            const details = div.querySelector(`#details-${item.id}`);
+            const mapBtn = div.querySelector('.show-map-btn');
+
+            header.onclick = () => {
+                details.classList.toggle('open');
+                // Optional: Auto-pan on expand if desired, uncomment next line
+                // if(onClickMarker) onClickMarker(); 
+            };
+
+            if(onClickMarker) {
+                mapBtn.onclick = onClickMarker;
+            } else {
+                mapBtn.style.display = 'none';
+            }
+
             return div;
         }
 
